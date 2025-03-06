@@ -1,0 +1,65 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_DRIVER: overlay2
+  AZURE_REGISTRY_URL: "cogniblyacr.azurecr.io"
+  AZURE_REGISTRY_REPO: "cognibly"
+
+services:
+  - name: docker:dind
+    command: ["--tls=false"]
+
+build:
+  stage: build
+  image: docker:stable
+  before_script:
+    - apk add --no-cache curl
+    - until curl -s http://docker:2375/version; do echo "Waiting for Docker service..."; sleep 1; done
+    - docker info
+    - echo "$AZURE_REGISTRY_PASSWORD" | docker login "$AZURE_REGISTRY_URL" -u "$AZURE_REGISTRY_USERNAME" --password-stdin
+  script:
+    - |
+      if [ "$CI_COMMIT_REF_NAME" = "main" ]; then
+        echo "Building for main branch..."
+        docker build \
+          --build-arg ENVIRONMENT=production \
+          --build-arg ENV_FILE=.env \
+          -t "$AZURE_REGISTRY_URL/$AZURE_REGISTRY_REPO:$CI_COMMIT_SHA" .
+        docker push "$AZURE_REGISTRY_URL/$AZURE_REGISTRY_REPO:$CI_COMMIT_SHA"
+        docker tag "$AZURE_REGISTRY_URL/$AZURE_REGISTRY_REPO:$CI_COMMIT_SHA" "$AZURE_REGISTRY_URL/$AZURE_REGISTRY_REPO:latest"
+        docker push "$AZURE_REGISTRY_URL/$AZURE_REGISTRY_REPO:latest"
+      elif [ "$CI_COMMIT_REF_NAME" = "dev" ]; then
+        echo "Building for dev branch..."
+        docker build \
+          --build-arg ENVIRONMENT=development \
+          --build-arg ENV_FILE=.dev.env \
+          -t "$AZURE_REGISTRY_URL/$AZURE_REGISTRY_REPO:dev-$CI_COMMIT_SHA" .
+        docker push "$AZURE_REGISTRY_URL/$AZURE_REGISTRY_REPO:dev-$CI_COMMIT_SHA"
+        docker tag "$AZURE_REGISTRY_URL/$AZURE_REGISTRY_REPO:dev-$CI_COMMIT_SHA" "$AZURE_REGISTRY_URL/$AZURE_REGISTRY_REPO:dev-latest"
+        docker push "$AZURE_REGISTRY_URL/$AZURE_REGISTRY_REPO:dev-latest"
+      fi
+  only:
+    - main
+    - dev
+
+deploy:
+  stage: deploy
+  image: mcr.microsoft.com/azure-cli
+  script:
+    - |
+      if [ "$CI_COMMIT_REF_NAME" = "main" ]; then
+        echo "Deploying to Azure App Service Production..."
+        export ENVIRONMENT=production
+        export FLASK_ENV=production
+      elif [ "$CI_COMMIT_REF_NAME" = "dev" ]; then
+        echo "Deploying to Azure App Service Development..."
+        export ENVIRONMENT=development
+        export FLASK_ENV=development
+      fi
+  only:
+    - main
+    - dev

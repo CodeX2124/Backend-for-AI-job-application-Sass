@@ -1,0 +1,30 @@
+# Ignore all .env files
+#**/.env
+
+# Ignore any files that have .env. in the name (like .env.local, .env.production, etc.)
+#**/.env.*
+
+#**/*.env
+
+**/*.ppk
+
+**/*.pem
+
+# Virtual Environment
+cognibly-venv/
+venv/
+env/
+.env/
+.dev.env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.log
+
+# IDE
+.vscode/
+.idea/
