@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% if current_user.is_subscribed and not current_user.cancel_at_period_end %}
+<h1>Current Subscription</h1>
+<p>Your subscription will be renewed on {{ next_payment_date }}</p>
+{% if next_payment_amount is not none %}
+<p>Next charge amount: {{ next_payment_amount }}</p>
+{% endif %}
+<button onclick="confirmCancel()" id="cancelModal" class="btn btn-danger">Cancel Subscription</button>
+
+<script>
+function confirmCancel() {
+  let text = "Cancel Subscription\n\n" +
+            "Are you sure you want to cancel your subscription?\n\n" +
+            "Please note:\n" +
+            "• Your subscription privileges will not be cancelled immediately.\n" +
+            "• Your subscription will expire at the end of the current billing period.\n" +
+            "• Your card will not be charged for the next billing period.";
+  if (confirm(text) == true) {
+    window.location.href = "{{ url_for('main.cancel_subscription') }}";
+  } 
+}
+</script>
+
+{% elif current_user.is_subscribed and current_user.cancel_at_period_end %}
+<h1>Current Subscription</h1>
+<p>Your subscription will expire on {{ next_payment_date }}</p>
+<p>Your card will not be charged.</p>
+<button onclick="confirmCancel()" id="cancelModal" class="btn btn-danger" style="background-color:green">Undo Cancel Subscription</button>
+
+<script>
+function confirmCancel() {
+  let text = "Undo Cancel Subscription\n\n" +
+            "This will resume your subscription to Cognibly\n\n" +
+            "Please note:\n" +
+            "• Your subscription will be renewed at the end of the current billing period.\n" +
+            "• Your card will not be charged until the next billing period.";
+  if (confirm(text) == true) {
+    window.location.href = "{{ url_for('main.dont_cancel_subscription') }}";
+  } 
+}
+</script>
+
+{% else %}
+<h1>Upgrade to Cognibly Premium</h1>
+<p>Unlock the full potential of Cognibly by subscribing to our Premium plan. Premium members can generate custom cover letters and resumes, and much more!</p>
+<a href="{{ url_for('main.pricing') }}" class="btn btn-primary">Learn more about Cognibly Premium</a>
+
+{% endif %}
+
+{% endblock %}

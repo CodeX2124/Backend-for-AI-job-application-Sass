@@ -1,0 +1,955 @@
+{% extends "base.html" %}
+{% block content %}
+{% if not current_user.is_authenticated %}
+<div class="container text-center">
+    <h1>You're not logged in.</h1>
+    <p>Please log in or sign up to continue.</p>
+    <a class="btn btn-primary d-inline-block" href="{{ url_for('main.login') }}">Login</a>
+    <a class="btn btn-secondary d-inline-block" href="{{ url_for('main.signup') }}">Sign Up</a>
+</div>
+{% else %}
+<h1>Job Preferences</h1>
+<form method="POST" action="">
+    {{ form.hidden_tag() }}
+
+    <!-- Full Name -->
+      <!-- Full Name -->
+      <div class="form-group">
+        {{ form.full_name.label }}
+        {{ form.full_name(class="form-control", placeholder="Enter your full name") }}
+    </div>
+
+    <!-- Education Title (Dropdown) -->
+    <div class="form-group">
+        {{ form.postnomial.label }}
+        {{ form.postnomial(class="form-control") }}
+    </div>
+
+    <!-- Contact Details (Phone, Email) -->
+    <div class="form-group">
+        <label for="phone">Phone</label>
+        {{ form.contact_phone(class="form-control", placeholder="Enter your phone number") }}
+    </div>
+    <div class="form-group">
+        <label for="email">Email</label>
+        {{ form.contact_email(class="form-control", placeholder="Enter your email address") }}
+    </div>
+
+    <!-- Existing fields -->
+    <div class="form-group">
+        {{ form.ideal_work_situation.label }}
+        {{ form.ideal_work_situation(class="form-control wide-textfield") }}
+    </div>
+
+    <div class="tag-input-container">
+        <div class="input-wrapper">
+            <label for="preferred_industries" class="form-label">Preferred Industries</label>
+            <input type="text" id="preferred_industries" class="form-control tag-input" placeholder="Type industries...">
+            <ul class="list-group mt-2" id="suggestion-list-preferred_industries"></ul>
+            <div id="tags-container-preferred_industries" class="mt-3"></div>
+    
+            <!-- Preferred Roles -->
+            <label for="preferred_roles_responsibilities" class="form-label">Preferred Roles and Responsibilities</label>
+            <input type="text" id="preferred_roles_responsibilities" class="form-control tag-input" placeholder="Type roles...">
+            <ul class="list-group mt-2" id="suggestion-list-preferred_roles_responsibilities"></ul>
+            <div id="tags-container-preferred_roles_responsibilities" class="mt-3"></div>
+        </div>
+    </div>
+
+    <!-- <div class="tag-input-container">
+        <div class="input-wrapper">
+            {{form.preferred_roles_responsibilities.label}}
+            <input type="text" id="preferred-roles-input" placeholder="Add role...">
+            <div id="role-suggestions" class="suggestions"></div>
+        </div>
+        <div id="preferred-roles-tags"></div>
+        <input type="hidden" name="preferred_roles_responsibilities" id="preferred-roles-hidden">
+    </div> -->
+
+    <div class="form-group">
+        {{ form.work_arrangement_preference.label }}
+        {{ form.work_arrangement_preference(class="form-control") }}
+    </div>
+
+    <div class="form-group">
+        {{ form.current_city.label }}
+        {{ form.current_city(class="form-control") }}
+    </div>
+
+    <div class="form-group">
+        {{ form.current_state.label }}
+        {{ form.current_state(class="form-control") }}
+    </div>
+        
+    <div class="form-group">
+        {{ form.current_address.label }}
+        {{ form.current_address(class="form-control", placeholder="Enter your living address") }}
+    </div>
+
+    <!-- Contact Details (Phone, Email) -->
+    <div class="form-group">
+        {{ form.contact_phone.label }}
+        {{ form.contact_phone(class="form-control", placeholder="Enter your phone number") }}
+    </div>
+    <div class="form-group">
+        {{ form.contact_email.label }}
+        {{ form.contact_email(class="form-control", placeholder="Enter your email address") }}
+    </div>
+
+    <!-- Relocation preferences -->
+    <div class="form-group" id="relocation-section">
+        {{ form.willing_to_relocate.label }}
+        <div class="radio-group">
+            {% for subfield in form.willing_to_relocate %}
+                <div class="form-check form-check-inline">
+                    {{ subfield(class="form-check-input") }}
+                    {{ subfield.label(class="form-check-label") }}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+        <!-- Preferred Locations -->
+        <div id="preferred-locations-container" class="mt-3 d-none">
+            <label for="preferred_locations" class="form-label">Preferred Locations</label>
+            <input type="text" id="preferred_locations" class="form-control tag-input" placeholder="Type locations...">
+            <ul class="list-group mt-2" id="suggestion-list-preferred_locations"></ul>
+            <div id="tags-container-preferred_locations" class="mt-3"></div>
+        </div>
+
+    <div class="form-group">
+        {{ form.expected_salary_range.label }}
+        <div class="slider-container">
+            <input 
+                type="range" 
+                id="salary_slider" 
+                min="0" 
+                max="300000" 
+                step="5000" 
+                value="{{ form.expected_salary_range.data or 150000 }}" 
+                class="form-control-range"
+            >
+            <div id="salary-value">$150,000</div>
+        </div>
+        <div class="slider-labels">
+            <small>$0</small>
+            <small>$300,000</small>
+        </div>
+        {{ form.expected_salary_range(type="hidden", id="salary_input") }}
+    </div>
+
+  <!-- Work Experience -->
+  <div class="form-group">
+    <h3>Work Experience</h3>
+    <div id="work-experience-container">
+        {% for entry in work_experience_entries %}
+            <div class="work-experience-entry" id="work-experience-{{ entry.id }}">
+                <p>Company: <strong>{{ entry.company }}</strong></p>
+                <p>Job Title: <strong>{{ entry.title }}</strong></p>
+                <p>Description: {{ entry.description }}</p>
+                <p>{{ entry.start_month }}/{{ entry.start_year }} - {{ entry.end_month or 'Present' }}/{{ entry.end_year or 'Present' }}</p>
+                <button type="button" class="btn btn-danger" onclick="removeWorkExperience({{ entry.id }})">Remove</button>
+            </div>
+        {% endfor %}
+    </div>
+    <button type="button" class="btn btn-primary" onclick="openAddWorkExperienceModal()">Add Work Experience</button>
+</div>
+
+<!-- Education -->
+<div class="form-group">
+    <h3>Education</h3>
+    <div id="education-container">
+        {% for entry in education_entries %}
+            <div class="education-entry" id="education-{{ entry.id }}">
+                <p>Institution: <strong>{{ entry.institution }}</strong></p>
+                <p>Degree: <strong>{{ entry.degree }}</strong></p>
+                <p>Field: {{ entry.field_of_study }}</p>
+                <p>Description: {{ entry.description }}</p>
+                <p>{{ entry.start_month }}/{{ entry.start_year }} - {{ entry.end_month or 'Present' }}/{{ entry.end_year or 'Present' }}</p>
+                <button type="button" class="btn btn-danger" onclick="removeEducation({{ entry.id }})">Remove</button>
+            </div>
+        {% endfor %}
+    </div>
+    <button type="button" class="btn btn-primary" onclick="openAddEducationModal()">Add Education</button>
+</div>
+
+<!-- Certifications -->
+<div class="form-group">
+    <h3>Certifications</h3>
+    <div id="certification-container">
+        {% for entry in certification_entries %}
+            <div class="certification-entry" id="certification-{{ entry.id }}">
+                <p><strong>{{ entry.title }}</strong></p>
+                <p>{{ entry.issuer }}</p>
+                <p>{{ entry.acquired_date }}</p>
+                <button type="button" class="btn btn-danger" onclick="removeCertification({{ entry.id }})">Remove</button>
+            </div>
+        {% endfor %}
+    </div>
+    <button type="button" class="btn btn-primary" onclick="openAddCertificationModal()">Add Certification</button>
+</div>
+
+<!-- Submit button -->
+<div class="form-group">
+    {{ form.submit(class="btn btn-primary") }}
+</div>
+</form>
+
+<!-- Add Work Experience Modal -->
+<div class="modal" id="addWorkExperienceModal" tabindex="-1" aria-labelledby="addWorkExperienceModalLabel" aria-hidden="true">
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="addWorkExperienceModalLabel">Add Work Experience</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <form id="work-experience-form">
+                <div class="mb-3">
+                    <label for="work-company" class="form-label">Company Name</label>
+                    <input type="text" class="form-control" id="work-company" name="company" required>
+                </div>
+                <div class="mb-3">
+                    <label for="work-title" class="form-label">Job Title</label>
+                    <input type="text" class="form-control" id="work-title" name="title" required>
+                </div>
+                <div class="mb-3">
+                    <label for="work-description" class="form-label">Job Description</label>
+                    <textarea class="form-control" id="work-description" name="description" rows="3"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="work-start-date" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="work-start-date" name="start_date" required>
+                </div>
+                <!-- Updated End Date Section for Work Experience -->
+                <div class="mb-3">
+                    <label for="work-end-date" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="work-end-date" name="end_date" placeholder="Select end date">
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" value="current" id="work-current" name="end_date">
+                        <label class="form-check-label" for="work-current">Current Job (Present)</label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Work Experience</button>
+            </form>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- Add Education Modal -->
+<div class="modal" id="addEducationModal" tabindex="-1" aria-labelledby="addEducationModalLabel" aria-hidden="true">
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="addEducationModalLabel">Add Education</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <form id="education-form">
+                <div class="mb-3">
+                    <label for="education-school" class="form-label">School Name</label>
+                    <input type="text" class="form-control" id="education-school" name="school" required>
+                </div>
+                <div class="mb-3">
+                    <label for="education-degree" class="form-label">Degree</label>
+                    {{ education_form.degree(class="form-control", id="education-degree", required=True) }}
+                    {% if education_form.degree.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in education_form.degree.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label for="degree-title" class="form-label">Degree Title</label>
+                    {{ education_form.degree_title(class="form-control", id="degree-title", required=True) }}
+                    {% if education_form.degree_title.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in education_form.degree_title.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label for="education-field" class="form-label">Field of Study</label>
+                    <input type="text" class="form-control" id="education-field" name="field" required>
+                </div>
+                <div class="mb-3">
+                    <label for="education-start-date" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="education-start-date" name="start_date" required>
+                </div>
+                <!-- Updated End Date Section for Work Experience -->
+                <div class="mb-3">
+                    <label for="education-end-date" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="education-end-date" name="end_date" placeholder="Select end date">
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" value="current" id="education-current" name="end_date">
+                        <label class="form-check-label" for="education-current">Current Job (Present)</label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Education</button>
+            </form>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- Add Certification Modal -->
+<div class="modal" id="addCertificationModal" tabindex="-1" aria-labelledby="addCertificationModalLabel" aria-hidden="true">
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="addCertificationModalLabel">Add Certification</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <form id="certification-form">
+                <div class="mb-3">
+                    <label for="certification-name" class="form-label">Certification Name</label>
+                    <input type="text" class="form-control" id="certification-name" name="name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="certification-issuer" class="form-label">Issuer</label>
+                    <input type="text" class="form-control" id="certification-issuer" name="issuer" required>
+                </div>
+                <div class="mb-3">
+                    <label for="certification-issue-date" class="form-label">Issue Date</label>
+                    <input type="date" class="form-control" id="certification-issue-date" name="issue_date" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Certification</button>
+            </form>
+        </div>
+    </div>
+</div>
+</div>
+
+<script>
+// Open the modals for work experience, education, and certifications
+function openAddWorkExperienceModal() {
+new bootstrap.Modal(document.getElementById('addWorkExperienceModal')).show();
+}
+
+function openAddEducationModal() {
+new bootstrap.Modal(document.getElementById('addEducationModal')).show();
+}
+
+function openAddCertificationModal() {
+new bootstrap.Modal(document.getElementById('addCertificationModal')).show();
+}
+
+
+document.getElementById('work-experience-form').addEventListener('submit', function(event) {
+event.preventDefault();
+
+// Check if 'Current Job' checkbox is selected
+const isCurrentJob = document.getElementById('work-current').checked;
+const endDate = isCurrentJob ? 'Present' : document.getElementById('work-end-date').value;
+
+// Parse start and end dates into month/year fields
+const startDate = document.getElementById('work-start-date').value; // Format: YYYY-MM
+const [startYear, startMonth] = startDate.split('-'); // Split into year and month
+
+let endYear = null;
+let endMonth = null;
+if (!isCurrentJob && endDate) {
+    [endYear, endMonth] = endDate.split('-'); // Split end date into year and month
+}
+
+// Create a JSON object that matches the server structure
+const jsonData = {
+    company: document.getElementById('work-company').value,
+    title: document.getElementById('work-title').value,
+    description: document.getElementById('work-description').value || null,
+    start_month: parseInt(startMonth, 10), // Convert to integer
+    start_year: parseInt(startYear, 10),
+    end_month: endMonth ? parseInt(endMonth, 10) : null,
+    end_year: endYear ? parseInt(endYear, 10) : null,
+};
+
+fetch('/work_experience', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(jsonData) // Convert JSON object to string
+}).then(response => {
+    if (response.ok) {
+        location.reload(); // Refresh or update the page with the new data
+    } else {
+        console.error('Failed to submit work experience');
+    }
+}).catch(error => console.error('Error:', error));
+});
+
+document.getElementById('education-form').addEventListener('submit', function(event) {
+event.preventDefault();
+
+// Check if 'Currently Studying' checkbox is selected
+const isCurrentlyStudying = document.getElementById('education-current').checked;
+const endDate = isCurrentlyStudying ? 'Present' : document.getElementById('education-end-date').value;
+
+// Parse start and end dates into month/year fields
+const startDate = document.getElementById('education-start-date').value; // Format: YYYY-MM
+const [startYear, startMonth] = startDate.split('-'); // Split into year and month
+
+let endYear = null;
+let endMonth = null;
+if (!isCurrentlyStudying && endDate) {
+    [endYear, endMonth] = endDate.split('-'); // Split end date into year and month
+}
+
+// Create a JSON object that matches the server structure
+const jsonData = {
+    institution: document.getElementById('education-school').value,
+    degree: document.getElementById('education-degree').value,
+    degree_title: document.getElementById('degree-title').value,
+    field_of_study: document.getElementById('education-field').value,
+    start_month: parseInt(startMonth, 10), // Convert to integer
+    start_year: parseInt(startYear, 10),
+    end_month: endMonth ? parseInt(endMonth, 10) : null,
+    end_year: endYear ? parseInt(endYear, 10) : null,
+};
+
+fetch('/education', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(jsonData) // Convert JSON object to string
+}).then(response => {
+    if (response.ok) {
+        location.reload(); // Refresh page or dynamically add the new entry
+    } else {
+        console.error('Failed to submit education details');
+    }
+}).catch(error => console.error('Error:', error));
+});
+
+
+document.getElementById('certification-form').addEventListener('submit', function(event) {
+event.preventDefault();
+
+// Get the values from the form fields
+const certificationName = document.getElementById('certification-name').value;  // Certification name
+const certificationIssuer = document.getElementById('certification-issuer').value;  // Issuer name
+const issueDate = document.getElementById('certification-issue-date').value;  // Issue date (YYYY-MM-DD)
+
+// Check if the required fields are filled out
+if (!certificationName || !certificationIssuer || !issueDate) {
+    console.error('All fields are required');
+    return;  // Stop if any field is missing
+}
+
+// Create a JSON object to send to the server
+const jsonData = {
+    title: certificationName,  // Certification name
+    issuer: certificationIssuer,  // Issuer name
+    acquired_date: issueDate,  // The issue date (you can adjust the format if needed)
+};
+
+// Send the JSON data to the server
+fetch('/certifications', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(jsonData)  // Convert JSON object to string
+}).then(response => {
+    if (response.ok) {
+        location.reload();  // Refresh page or dynamically add the new entry
+    } else {
+        console.error('Failed to submit certification details');
+    }
+}).catch(error => console.error('Error:', error));
+});
+
+
+</script>
+
+<script>
+function removeWorkExperience(entryId) {
+// Make an AJAX call to delete work experience entry from the backend
+fetch(`/work_experience/${entryId}`, {
+    method: 'DELETE'
+}).then(response => {
+    if (response.ok) {
+        document.getElementById(`work-experience-${entryId}`).remove();
+    }
+});
+}
+function removeEducation(entryId) {
+// Make an AJAX call to delete education entry from the backend
+fetch(`/education/${entryId}`, {
+    method: 'DELETE'
+}).then(response => {
+    if (response.ok) {
+        document.getElementById(`education-${entryId}`).remove();
+    }
+});
+}
+
+function removeCertification(entryId) {
+// Make an AJAX call to delete certification entry from the backend
+fetch(`/certifications/${entryId}`, {
+    method: 'DELETE'
+}).then(response => {
+    if (response.ok) {
+        document.getElementById(`certification-${entryId}`).remove();
+    }
+});
+}
+</script>
+
+
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // Fetch tags for each category on page load
+        ['preferred_industries', 'preferred_roles_responsibilities', 'preferred_locations'].forEach(category => {
+            $.ajax({
+                url: `/get-tags/${category}`,
+                type: 'GET',
+                success: function (data) {
+                    // Populate existing tags
+                    const $tagContainer = $(`#tags-container-${category}`);
+                    data.forEach(tag => {
+                        $tagContainer.append(addTag(tag, category));
+                    });
+                },
+                error: function (xhr) {
+                    console.error(`Error fetching tags for ${category}:`, xhr.responseText);
+                }
+            });
+        });
+        const baseURL = "/"; // Base URL for AJAX requests
+
+        // Manage the display of preferred locations based on willingness to relocate
+        $('#willing_to_relocate-0').on('change', function () {
+            const isWilling = $(this).val() === "yes";
+            const $locationsContainer = $('#preferred-locations-container');
+            const $locationsInput = $('#preferred-locations');
+
+            if (isWilling) {
+                $locationsContainer.removeClass('d-none');
+            } else {
+                $locationsContainer.addClass('d-none');
+                // Clear tags for locations if user is not willing to relocate
+                clearTags($locationsInput, 'locations');
+            }
+        });
+
+        // Handle input and suggestions for all tag inputs
+        $('.tag-input').on('input', function () {
+            const query = $(this).val();
+            const category = $(this).attr('id').replace(/-/g, '_');
+            const $suggestionList = $(`#suggestion-list-${category}`);
+
+            if (query.length > 1) {
+                $.ajax({
+                    url: `${baseURL}get-suggestions/${category}`,
+                    type: 'GET',
+                    data: { query },
+                    success: function (data) {
+                        $suggestionList.empty();
+                        data.forEach(suggestion => {
+                            $suggestionList.append(`<li class="list-group-item suggestion-item">${suggestion}</li>`);
+                        });
+                    }
+                });
+            } else {
+                $suggestionList.empty();
+            }
+        });
+
+        // Add tag on suggestion click
+        $('.list-group').on('click', '.suggestion-item', function () {
+            const tag = $(this).text();
+            const category = $(this).closest('.list-group').attr('id').split('-').slice(2).join('_'); // Get category
+            addTag(tag, category);
+
+            // Clear suggestions and input
+            $(`#suggestion-list-${category}`).empty();
+            $(`#preferred-${category}`).val('');
+
+            $.ajax({
+                url: `/add-tag/${category}`,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ tag: tag }), // Only passing the tag
+                success: function (response) {
+                    console.log(response.message);
+                },
+                error: function (xhr) {
+                    console.error('Error:', xhr.responseText);
+                }
+            });
+        });
+
+        function removeTag(tag, category) {
+            // Update database via AJAX
+            $.ajax({
+                url: `${baseURL}remove-tag/${category}`,
+                type: 'DELETE',
+                contentType: 'application/json',
+                data: JSON.stringify({ tag }),
+                success: function (response) {
+                    console.log(response.message);
+                },
+                error: function (error) {
+                    console.error('Error removing tag:', error);
+                }
+            });
+        }
+
+
+        // Remove tag on close button click
+        $('.container').on('click', '.remove-tag', function () {
+            const tag = $(this).data('tag');
+            const category = $(this).data('category');
+
+            // Remove tag from UI
+            $(this).parent().remove();
+
+            // Call the removeTag function
+            removeTag(tag, category);
+        });
+
+
+
+        // Function to add a tag
+        function addTag(tag, category) {
+            const tagElement = $(`
+                <span class="badge bg-primary me-2">
+                    ${tag}
+                    <button type="button" class="btn-close btn-close-white ms-2 remove-tag" aria-label="Close" data-tag="${tag}" data-category="${category}"></button>
+                </span>
+            `);
+            $(`#tags-container-${category}`).append(tagElement);
+        }
+
+        // Function to clear tags
+        function clearTags($input, category) {
+            $(`#tags-container-${category}`).empty();
+            $.ajax({
+                url: `${baseURL}clear-tags/${category}`,
+                type: 'POST',
+                success: function (response) {
+                    console.log(response.message);
+                }
+            });
+        }
+
+
+        // Helper function to create tag element
+        function createTagElement(tag, category) {
+            return `
+                <span class="badge bg-primary me-2 tag-item">
+                    ${tag}
+                    <button type="button" class="btn-close btn-close-white ms-2 remove-tag" aria-label="Close" data-tag="${tag}" data-category="${category}"></button>
+                </span>
+            `;
+        }
+    });
+</script>
+<script>
+// Example data for suggestions
+const industries = [
+    // Technology and IT
+    "Software Development", "Cloud Computing", "Artificial Intelligence", "Machine Learning",
+    "Cybersecurity", "Data Analytics", "Internet of Things (IoT)", "Blockchain",
+    "Quantum Computing", "Robotics", "Virtual Reality", "Augmented Reality",
+    "5G Technology", "Edge Computing", "DevOps", "IT Consulting",
+
+    // Healthcare and Life Sciences
+    "Pharmaceuticals", "Biotechnology", "Medical Devices", "Healthcare IT",
+    "Telemedicine", "Genomics", "Personalized Medicine", "Mental Health Services",
+    "Elder Care", "Veterinary Medicine", "Dental Care", "Physical Therapy",
+    "Nutrition and Wellness", "Health Insurance", "Medical Research", "Public Health",
+
+    // Finance and Banking
+    "Commercial Banking", "Investment Banking", "Asset Management", "Hedge Funds",
+    "Venture Capital", "Private Equity", "Insurance", "Financial Technology (FinTech)",
+    "Cryptocurrency", "Personal Finance", "Accounting", "Tax Services",
+    "Real Estate Investment", "Mortgage Lending", "Credit Services", "Financial Consulting",
+
+    // Education and Training
+    "K-12 Education", "Higher Education", "Online Education", "EdTech",
+    "Corporate Training", "Language Learning", "Special Education", "Early Childhood Education",
+    "Vocational Training", "Test Preparation", "Educational Consulting", "Tutoring Services",
+    "Adult Education", "STEM Education", "Art Education", "Music Education",
+
+    // Manufacturing and Industry
+    "Automotive Manufacturing", "Aerospace Manufacturing", "Electronics Manufacturing",
+    "Textile Manufacturing", "Food Processing", "Chemical Manufacturing",
+    "Pharmaceutical Manufacturing", "Industrial Automation", "3D Printing",
+    "Packaging", "Metalworking", "Plastics Manufacturing", "Paper and Pulp",
+    "Machinery Manufacturing", "Furniture Manufacturing", "Toy Manufacturing",
+
+    // Retail and E-commerce
+    "Online Retail", "Brick-and-Mortar Retail", "Grocery", "Fashion and Apparel",
+    "Luxury Goods", "Consumer Electronics", "Home Improvement", "Sporting Goods",
+    "Beauty and Cosmetics", "Pet Supplies", "Jewelry", "Books and Media",
+    "Furniture and Home Decor", "Office Supplies", "Automotive Retail", "Specialty Foods",
+
+    // Hospitality and Tourism
+    "Hotels and Resorts", "Restaurants", "Fast Food", "Catering",
+    "Travel Agencies", "Airlines", "Cruise Lines", "Theme Parks",
+    "Casinos and Gaming", "Event Planning", "Tour Operators", "Vacation Rentals",
+    "Spa and Wellness Centers", "Timeshare", "Eco-Tourism", "Cultural Tourism",
+
+    // Energy and Utilities
+    "Oil and Gas", "Renewable Energy", "Solar Power", "Wind Power",
+    "Hydroelectric Power", "Nuclear Energy", "Energy Storage", "Smart Grid Technology",
+    "Waste Management", "Water Treatment", "Natural Gas Distribution", "Electric Utilities",
+    "Energy Efficiency", "Geothermal Energy", "Biomass Energy", "Hydrogen Fuel Cells",
+
+    // Telecommunications
+    "Wireless Carriers", "Broadband Providers", "Satellite Communications", "Fiber Optics",
+    "Telecom Equipment", "VoIP Services", "Network Infrastructure", "Telecom Software",
+    "Mobile Virtual Network Operators", "Unified Communications", "Telecom Consulting", "Data Centers",
+
+    // Automotive
+    "Car Manufacturing", "Electric Vehicles", "Autonomous Vehicles", "Auto Parts Manufacturing",
+    "Car Dealerships", "Auto Repair and Maintenance", "Fleet Management", "Car Rental",
+    "Automotive Design", "Motorcycle Manufacturing", "Truck Manufacturing", "Automotive Software",
+
+    // Aerospace and Defense
+    "Aircraft Manufacturing", "Space Technology", "Satellite Systems", "Defense Contracting",
+    "Missile Systems", "Military Vehicles", "Avionics", "Drone Technology",
+    "Air Traffic Control Systems", "Aircraft Maintenance", "Space Exploration", "Rocket Propulsion",
+
+    // Agriculture and Farming
+    "Crop Farming", "Livestock Farming", "Organic Farming", "Precision Agriculture",
+    "Aquaculture", "Forestry", "Agricultural Biotechnology", "Farm Equipment",
+    "Seed Technology", "Pesticides and Fertilizers", "Vertical Farming", "Hydroponics",
+    "Agricultural Drones", "Food Safety", "Sustainable Agriculture", "Agritourism",
+
+    // Construction and Real Estate
+    "Residential Construction", "Commercial Construction", "Infrastructure Development",
+    "Architecture", "Civil Engineering", "Real Estate Development", "Property Management",
+    "Interior Design", "Landscape Architecture", "Building Materials", "Smart Home Technology",
+    "Green Building", "Facilities Management", "Urban Planning", "Real Estate Investment Trusts",
+
+    // Entertainment and Media
+    "Film Production", "Television Broadcasting", "Streaming Services", "Music Industry",
+    "Video Game Development", "Publishing", "Advertising", "Public Relations",
+    "Social Media", "News Media", "Animation", "Podcasting",
+    "Live Events", "Sports Entertainment", "Radio Broadcasting", "Digital Marketing",
+
+    // Transportation and Logistics
+    "Trucking", "Rail Transport", "Air Cargo", "Maritime Shipping",
+    "Logistics Software", "Warehousing", "Supply Chain Management", "Last-Mile Delivery",
+    "Freight Forwarding", "Autonomous Logistics", "Cold Chain Logistics", "Reverse Logistics",
+    "Intermodal Transportation", "Logistics Consulting", "Postal Services", "Courier Services",
+
+    // Environmental Services
+    "Environmental Consulting", "Pollution Control", "Recycling", "Green Technology",
+    "Climate Change Mitigation", "Conservation", "Sustainable Development", "Ecological Restoration",
+    "Environmental Impact Assessment", "Hazardous Waste Management", "Air Quality Management", "Water Conservation",
+
+    // Professional Services
+    "Legal Services", "Management Consulting", "Human Resources", "Recruitment",
+    "Marketing Services", "Graphic Design", "Engineering Services", "Market Research",
+    "Business Process Outsourcing", "Translation Services", "Data Entry Services", "Transcription Services",
+
+    // Non-Profit and Social Services
+    "Charitable Organizations", "Social Advocacy", "Community Development", "Disaster Relief",
+    "International Aid", "Human Rights", "Animal Welfare", "Environmental Conservation",
+    "Arts and Culture", "Education Foundations", "Healthcare Foundations", "Religious Organizations"
+];
+
+const rolesAndResponsibilities = [
+    // Management Roles
+    "Chief Executive Officer (CEO)", "Chief Financial Officer (CFO)", "Chief Operating Officer (COO)",
+    "Chief Technology Officer (CTO)", "Chief Marketing Officer (CMO)", "Chief Human Resources Officer (CHRO)",
+    "Director of Operations", "Project Manager", "Program Manager", "Department Manager",
+    "Team Leader", "Supervisor",
+
+    // Finance and Accounting
+    "Financial Analyst", "Accountant", "Auditor", "Budget Analyst", "Tax Specialist",
+    "Investment Banker", "Financial Planner", "Risk Manager", "Actuary",
+
+    // Technology and IT
+    "Software Engineer", "Full Stack Developer", "Front-end Developer", "Back-end Developer",
+    "Data Scientist", "Database Administrator", "Systems Administrator", "Network Engineer",
+    "Cloud Architect", "DevOps Engineer", "Information Security Analyst", "UI/UX Designer",
+    "Machine Learning Engineer", "Artificial Intelligence Specialist", "QA Engineer",
+
+    // Sales and Marketing
+    "Sales Representative", "Account Manager", "Business Development Manager",
+    "Marketing Specialist", "Digital Marketing Manager", "Content Marketing Manager",
+    "Brand Manager", "Product Marketing Manager", "SEO Specialist", "Social Media Manager",
+    "Public Relations Specialist", "Market Research Analyst",
+
+    // Human Resources
+    "HR Manager", "Recruiter", "Training and Development Specialist",
+    "Compensation and Benefits Analyst", "Employee Relations Specialist",
+    "Talent Acquisition Manager", "HR Business Partner", "Diversity and Inclusion Specialist",
+
+    // Operations and Logistics
+    "Operations Manager", "Supply Chain Manager", "Logistics Coordinator",
+    "Procurement Specialist", "Inventory Manager", "Quality Assurance Manager",
+    "Facilities Manager", "Production Planner", "Process Improvement Specialist",
+
+    // Customer Service
+    "Customer Service Representative", "Customer Success Manager",
+    "Technical Support Specialist", "Client Relations Manager",
+
+    // Research and Development
+    "Research Scientist", "Product Developer", "R&D Manager",
+    "Innovation Specialist", "Patent Specialist",
+
+    // Legal
+    "Corporate Lawyer", "Legal Counsel", "Compliance Officer",
+    "Paralegal", "Intellectual Property Specialist",
+
+    // Healthcare
+    "Physician", "Nurse", "Pharmacist", "Medical Researcher",
+    "Healthcare Administrator", "Physical Therapist", "Occupational Therapist",
+
+    // Education
+    "Teacher", "Professor", "Education Administrator", "Curriculum Developer",
+    "Instructional Designer", "School Counselor", "Special Education Specialist",
+
+    // Creative and Design
+    "Graphic Designer", "Art Director", "Copywriter", "Video Editor",
+    "UX/UI Designer", "Product Designer", "Industrial Designer",
+
+    // Engineering
+    "Mechanical Engineer", "Civil Engineer", "Electrical Engineer",
+    "Chemical Engineer", "Aerospace Engineer", "Environmental Engineer",
+
+    // Consulting
+    "Management Consultant", "Strategy Consultant", "IT Consultant",
+    "Financial Consultant", "Human Resources Consultant",
+
+    // Data and Analytics
+    "Data Analyst", "Business Intelligence Analyst", "Data Engineer",
+    "Statistician", "Operations Research Analyst",
+
+    // Project Management
+    "Project Coordinator", "Scrum Master", "Agile Coach",
+    "Program Director", "Portfolio Manager",
+
+    // Communications
+    "Communications Specialist", "Technical Writer", "Translator",
+    "Interpreter", "Copyeditor",
+
+    // Specialized Roles
+    "Sustainability Officer", "Diversity and Inclusion Manager",
+    "Change Management Specialist", "Crisis Management Specialist",
+    "Innovation Manager", "Knowledge Management Specialist"
+];
+
+const preferredLocationsList = [
+    "New York, NY", "Los Angeles, CA", "Chicago, IL", "Houston, TX", "Phoenix, AZ",
+    "Philadelphia, PA", "San Antonio, TX", "San Diego, CA", "Dallas, TX", "San Jose, CA",
+    "Austin, TX", "Jacksonville, FL", "San Francisco, CA", "Columbus, OH", "Fort Worth, TX",
+    "Indianapolis, IN", "Charlotte, NC", "Seattle, WA", "Denver, CO", "El Paso, TX",
+    "Washington, DC", "Boston, MA", "Detroit, MI", "Nashville, TN", "Oklahoma City, OK",
+    "Portland, OR", "Las Vegas, NV", "Louisville, KY", "Baltimore, MD", "Milwaukee, WI",
+    "Albuquerque, NM", "Tucson, AZ", "Fresno, CA", "Sacramento, CA", "Long Beach, CA",
+    "Kansas City, MO", "Mesa, AZ", "Virginia Beach, VA", "Atlanta, GA", "Colorado Springs, CO",
+    "Omaha, NE", "Raleigh, NC", "Miami, FL", "Cleveland, OH", "Tulsa, OK",
+    "Oakland, CA", "Minneapolis, MN", "Wichita, KS", "New Orleans, LA", "Arlington, TX",
+    "Bakersfield, CA", "Tampa, FL", "Honolulu, HI", "Anaheim, CA", "Santa Ana, CA",
+    "Corpus Christi, TX", "Riverside, CA", "St. Louis, MO", "Pittsburgh, PA", "Greensboro, NC",
+    "Lincoln, NE", "Anchorage, AK", "Plano, TX", "Orlando, FL", "Irvine, CA",
+    "Laredo, TX", "Chula Vista, CA", "Durham, NC", "Jersey City, NJ", "Fort Wayne, IN",
+    "St. Petersburg, FL", "Chandler, AZ", "Lubbock, TX", "Madison, WI", "Gilbert, AZ",
+    "Reno, NV", "Hialeah, FL", "Baton Rouge, LA", "Richmond, VA", "Boise, ID",
+    "San Bernardino, CA", "Spokane, WA", "Des Moines, IA", "Modesto, CA", "Fremont, CA",
+    "Santa Clarita, CA", "Mobile, AL", "Oxnard, CA", "Moreno Valley, CA", "Huntington Beach, CA",
+    "Aurora, CO", "Columbia, SC", "Grand Rapids, MI", "Salt Lake City, UT", "Tallahassee, FL",
+    "Overland Park, KS", "Knoxville, TN", "Worcester, MA", "Newport News, VA", "Brownsville, TX",
+    "Santa Rosa, CA", "Vancouver, WA", "Fort Lauderdale, FL", "Sioux Falls, SD", "Ontario, CA"
+];
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Existing tag input setup...
+
+    // Salary Slider Handling
+    const salarySlider = document.getElementById('salary_slider');
+    const salaryValueDisplay = document.getElementById('salary-value');
+    const salaryHiddenInput = document.getElementById('salary_input');
+    const sliderContainer = document.querySelector('.slider-container');
+
+    /**
+     * Formats a number as USD currency.
+     * @param {number} value - The number to format.
+     * @returns {string} - The formatted currency string.
+     */
+    function formatCurrency(value) {
+        return new Intl.NumberFormat('en-US', { 
+            style: 'currency', 
+            currency: 'USD', 
+            minimumFractionDigits: 0 
+        }).format(value);
+    }
+
+    /**
+     * Updates the salary display and hidden input based on the slider's value.
+     * Also repositions the salary-value div to follow the slider thumb.
+     * @param {number} value - The current value of the slider.
+     */
+    function updateSalary(value) {
+        salaryValueDisplay.textContent = formatCurrency(value);
+        salaryHiddenInput.value = value;
+
+        // Reposition the salary-value div
+        positionSalaryValue();
+    }
+
+    /**
+     * Calculates and sets the left position of the salary-value div
+     * so that it stays above the slider thumb.
+     */
+    function positionSalaryValue() {
+        const sliderWidth = salarySlider.offsetWidth;
+        const sliderMin = parseInt(salarySlider.min);
+        const sliderMax = parseInt(salarySlider.max);
+        const sliderValue = parseInt(salarySlider.value);
+
+        // Calculate the percentage position of the slider's current value
+        const percentage = (sliderValue - sliderMin) / (sliderMax - sliderMin);
+
+        // Calculate the position of the thumb
+        // Adjust for thumb width
+        const offset = (sliderWidth * percentage);
+        
+        // Set the left property
+        salaryValueDisplay.style.left = `${offset}px`;
+    }
+
+    // Initialize the display and hidden input with the slider's initial value
+    if(salarySlider && salaryValueDisplay && salaryHiddenInput) {
+        updateSalary(salarySlider.value);
+
+        // Update display, hidden input, and position on slider input
+        salarySlider.addEventListener('input', function() {
+            updateSalary(this.value);
+        });
+
+        // Reposition on window resize to maintain alignment
+        window.addEventListener('resize', positionSalaryValue);
+    } else {
+        console.error('Salary slider elements not found.');
+    }
+
+    // Existing relocation preference handling...
+    
+    // Example:
+    // setupTagInput(...);
+});
+
+</script>
+{% endif %}
+
+
+
+{% endblock %}
