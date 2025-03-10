@@ -1,0 +1,6 @@
+{% if current_user.is_subscribed %}
+    <p>Thank you for subscribing!</p>
+{% else %}
+    <p>Subscribe now to access premium features!</p>
+    <a href="{{ url_for('create_checkout_session') }}" class="btn-subscribe">Subscribe</a>
+{% endif %}
