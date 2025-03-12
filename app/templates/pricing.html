@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% set pricing_tiers = {
+    'free': {
+        'name': 'Free',
+        'price': '0',
+        'period': 'forever',
+        'features': [
+            '10 daily job recommendations',
+            'Indeed job board only',
+            'Basic job matching',
+            '7-day job history',
+            'Basic search filters',
+            'Single location search',
+            'Up to 3 industry preferences',
+            'Up to 2 role types',
+            'Basic salary range matching'
+        ]
+    },
+    'premium': {
+        'name': 'Premium',
+        'price': '49.99',
+        'period': 'month',
+        'features': [
+            'Unlimited job recommendations',
+            'Multiple job boards',
+            'Advanced AI matching algorithm',
+            'Real-time job alerts',
+            'Unlimited job history',
+            'AI cover letter generation',
+            'Auto-tailored resumes',
+            'Detailed job fit analysis',
+            'Skills gap analysis',
+            'AI interview preparation',
+            'Multiple location search',
+            'Unlimited industry preferences',
+            'Advanced salary insights',
+            'Priority support',
+            'Weekly job market reports'
+        ]
+    },
+    'concierge': {
+        'name': 'Fully Automated Concierge Job Search',
+        'price': 'Custom',
+        'period': 'package',
+        'features': [
+            'Dedicated job search team',
+            'Full-service job applications handled for you',
+            '2-3 interviews scheduled weekly average',
+            'Interview preparation coaching',
+            'Salary negotiation support',
+            'Resume rewriting by experts',
+            'Professional LinkedIn optimization',
+            'Custom cover letters for each role',
+            'Strategic job search planning',
+            'Access to hidden job market',
+            'Direct employer outreach',
+            'Weekly strategy calls',
+            'Interview feedback analysis',
+            'Job offer evaluation support',
+            'All Premium features included'
+        ]
+    }
+} %}
+
+<div class="container py-5">
+    <!-- Pricing Header -->
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold">Choose Your Plan</h1>
+        <p class="lead text-muted">Get matched with your perfect job opportunities</p>
+    </div>
+
+    <!-- Pricing Grid -->
+    <div class="row row-cols-1 row-cols-md-3 mb-5 justify-content-center">
+        {% for tier_id, tier in pricing_tiers.items() %}
+        <div class="col mb-4">
+            <div class="card h-100 shadow-sm {% if tier_id == 'premium' %}border-primary{% elif tier_id == 'concierge' %}border-success{% endif %}">
+                <div class="card-body">
+                    <!-- Tier Header -->
+                    <div class="text-center mb-4">
+                        <h2 class="card-title fw-bold">{{ tier.name }}</h2>
+                        <div class="pricing-amount mb-3">
+                            {% if tier.price == 'Custom' %}
+                                <span class="display-6 fw-bold">Contact Us</span>
+                            {% else %}
+                                <span class="display-5 fw-bold">${{ tier.price }}</span>
+                                <span class="text-muted">/{{ tier.period }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Features List -->
+                    <ul class="list-unstyled mb-4">
+                        {% for feature in tier.features %}
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle-fill {% if tier_id == 'concierge' %}text-success{% else %}text-success{% endif %} me-2"></i>
+                            {{ feature }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+
+                    <!-- Action Button -->
+                    <div class="text-center mt-auto">
+                        {% if tier_id == 'free' %}
+                            {% if not current_user.is_authenticated %}
+                                <a href="{{ url_for('main.signup') }}" 
+                                   class="btn btn-dark w-100">
+                                    Get Started
+                                </a>
+                            {% endif %}
+                        {% elif tier_id == 'concierge' %}
+                            <a href="https://calendly.com/book-with-reid/" 
+                               class="btn btn-success w-100">
+                                Book a Call
+                            </a>
+                        {% else %}
+                            {% if current_user.is_authenticated %}
+                                {% if not is_subscribed %}
+                                    <a href="{{ url_for('main.create_checkout_session') }}" 
+                                       class="btn btn-primary w-100">
+                                        Upgrade Now
+                                    </a>
+                                {% else %}
+                                    <button disabled 
+                                            class="btn btn-secondary w-100">
+                                        Current Plan
+                                    </button>
+                                {% endif %}
+                            {% else %}
+                                <a href="{{ url_for('main.signup') }}" 
+                                   class="btn btn-primary w-100">
+                                    Sign Up
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- FAQ Section remains the same -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h2 class="text-center fw-bold mb-4">Frequently Asked Questions</h2>
+            <div class="accordion" id="pricingFAQ">
+                <div class="accordion-item">
+                    <h3 class="accordion-header" id="faq1">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse1">
+                            Can I cancel my subscription anytime?
+                        </button>
+                    </h3>
+                    <div id="faqCollapse1" class="accordion-collapse collapse show" data-bs-parent="#pricingFAQ">
+                        <div class="accordion-body">
+                            Yes, you can cancel your premium subscription at any time. You'll continue to have access to premium features until the end of your billing period.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h3 class="accordion-header" id="faq2">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse2">
+                            How does the AI job matching work?
+                        </button>
+                    </h3>
+                    <div id="faqCollapse2" class="accordion-collapse collapse" data-bs-parent="#pricingFAQ">
+                        <div class="accordion-body">
+                            Our AI algorithm analyzes your preferences, skills, and experience to match you with the most relevant job opportunities across multiple job boards.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h3 class="accordion-header" id="faq3">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse3">
+                            What payment methods do you accept?
+                        </button>
+                    </h3>
+                    <div id="faqCollapse3" class="accordion-collapse collapse" data-bs-parent="#pricingFAQ">
+                        <div class="accordion-body">
+                            We accept all major credit cards through our secure payment processor, Stripe.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        transition: transform 0.3s ease;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+    }
+</style>
+
+{% endblock %}

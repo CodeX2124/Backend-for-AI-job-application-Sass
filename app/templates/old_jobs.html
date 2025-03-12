@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% if not current_user.is_authenticated %}
+<div class="container text-center">
+    <h1>You're not logged in.</h1>
+    <p>Please log in or sign up to continue.</p>
+    <a class="btn btn-primary d-inline-block" href="{{ url_for('main.login') }}">Login</a>
+    <a class="btn btn-secondary d-inline-block" href="{{ url_for('main.signup') }}">Sign Up</a>
+</div>
+{% else %}
+    <h1>Job Listings</h1>
+    <table class="job-table">
+        <thead>
+            <tr>
+                <th>
+                    <a href="{{ url_for('main.jobs', sort_by='job_title', order='asc' if sort_by == 'job_title' and order == 'desc' else 'desc', page=1, perPage=per_page, t=days_ago) }}">
+                        Job Title
+                        {% if sort_by == 'job_title' %}
+                            {% if order == 'asc' %}
+                                &uarr;
+                            {% else %}
+                                &darr;
+                            {% endif %}
+                        {% endif %}
+                    </a>
+                </th>
+                <th>
+                    <a href="{{ url_for('main.jobs', sort_by='company', order='asc' if sort_by == 'company' and order == 'desc' else 'desc', page=1, perPage=per_page, t=days_ago) }}">
+                        Company
+                        {% if sort_by == 'company' %}
+                            {% if order == 'asc' %}
+                                &uarr;
+                            {% else %}
+                                &darr;
+                            {% endif %}
+                        {% endif %}
+                    </a>
+                </th>
+                <th>
+                    <a href="{{ url_for('main.jobs', sort_by='location', order='asc' if sort_by == 'location' and order == 'desc' else 'desc', page=1, perPage=per_page, t=days_ago) }}">
+                        Location
+                        {% if sort_by == 'location' %}
+                            {% if order == 'asc' %}
+                                &uarr;
+                            {% else %}
+                                &darr;
+                            {% endif %}
+                        {% endif %}
+                    </a>
+                </th>
+                <th>
+                    <a href="{{ url_for('main.jobs', sort_by='percentile', order='asc' if sort_by == 'percentile' and order == 'desc' else 'desc', page=1, perPage=per_page, t=days_ago) }}">
+                        Score
+                        {% if sort_by == 'percentile' %}
+                            {% if order == 'asc' %}
+                                &uarr;
+                            {% else %}
+                                &darr;
+                            {% endif %}
+                        {% endif %}
+                    </a>
+                </th>
+                <th>Cover Letter</th>
+                <th>Resume</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for job in jobs %}
+                <tr>
+                    <td>
+                        <a href="{{ job.posting_url }}" target="_blank">{{ job.job_title }}</a>
+                    </td>
+                    <td>{{ job.company }}</td>
+                    <td>{{ job.location }}</td>
+                    <td>
+                        {% if job.percentile_512 is not none %}
+                            {{ "%.2f" | format(job.percentile_512) }}%
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <!-- <td>
+                        <a href="{{ url_for('main.generate_doc', job_id=job.id, type='cover_letter') }}" target="_blank">
+                            Generate
+                        </a>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('main.generate_doc', job_id=job.id, type='resume') }}" target="_blank">
+                            Generate
+                        </a>
+                    </td> -->
+                    {% if is_subscribed %}
+                    <td>
+                        <a href="{{ url_for('main.generate_doc', job_id=job.id, type='cover_letter') }}" target="_blank">
+                            Cover Letter
+                        </a>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('main.generate_doc', job_id=job.id, type='resume') }}" target="_blank">
+                            Resume
+                        </a>
+                    </td>
+                {% else %}
+                    <td colspan="2">
+                        <a href="{{ url_for('main.pricing') }}" class="btn btn-primary">
+                            Get Premium
+                        </a>
+                    </td>
+                {% endif %}
+                
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if not is_subscribed %}
+    <div class="container text-center">
+        <h1>Want to see more jobs?</h1>
+        <p>Subscribe to one of our plans.</p>
+        <a class="btn btn-primary d-inline-block" href="{{ url_for('main.pricing') }}">Pricing</a>
+    </div>
+    {% endif %}
+    <div class="pagination">
+        {% if page > 1 %}
+            <a href="{{ url_for('main.jobs', page=page-1, perPage=per_page, sort_by=sort_by, order=order, t=days_ago) }}">Previous</a>
+        {% else %}
+            <span>Previous</span>
+        {% endif %}
+
+        <span>Page {{ page }} of {{ total_pages }}</span>
+
+        {% if page < total_pages %}
+            <a href="{{ url_for('main.jobs', page=page+1, perPage=per_page, sort_by=sort_by, order=order, t=days_ago) }}">Next</a>
+        {% else %}
+            <span>Next</span>
+        {% endif %}
+    </div>
+    {% if is_subscribed %}
+    <div class="pagination-controls">
+        <form method="get" action="{{ url_for('main.jobs') }}">
+            <label for="perPage">Entries per page:</label>
+            <select id="perPage" name="perPage" onchange="this.form.submit()">
+                <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+                <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
+                <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+                <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+            </select>
+            
+            <label for="days_ago">Job Freshness:</label>
+            <select id="days_ago" name="t" onchange="this.form.submit()">
+                <option value="1" {% if days_ago == 1 %}selected{% endif %}>Last 1 day</option>
+                <option value="3" {% if days_ago == 3 %}selected{% endif %}>Last 3 days</option>
+                <option value="7" {% if days_ago == 7 %}selected{% endif %}>Last 7 days</option>
+                <option value="14" {% if days_ago == 14 %}selected{% endif %}>Last 14 days</option>
+                <option value="30" {% if days_ago == 30 %}selected{% endif %}>Last 30 days</option>
+            </select>
+            
+            <!-- Preserve current sort_by and order, and reset page number -->
+            <input type="hidden" name="sort_by" value="{{ sort_by }}">
+            <input type="hidden" name="order" value="{{ order }}">
+            <input type="hidden" name="page" value="1">
+        </form>
+    </div>
+    {% endif %}
+
+{% endif %}
+{% endblock %}
