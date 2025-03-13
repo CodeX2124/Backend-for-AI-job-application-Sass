@@ -26,5 +26,6 @@ __pycache__/
 *.log
 
 # IDE
-.vscode/
 .idea/
+config.bat
+node_modules
