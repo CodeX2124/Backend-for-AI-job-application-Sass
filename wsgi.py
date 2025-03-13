@@ -1,5 +1,9 @@
 # wsgi.py
 
+import utils.clients
+import utils.http_session
+import utils.transport
+import utils.session
 import os
 from decouple import Config,RepositoryEnv
 from dotenv import load_dotenv
